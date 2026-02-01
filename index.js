@@ -12,7 +12,7 @@ app.get('/', (req, res) => {
 })
 // mongoDB
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.USER_PASS}@servercluster.nvwzi5y.mongodb.net/?appName=ServerCluster`;
 
 
@@ -31,10 +31,24 @@ async function run() {
         await client.connect();
         const database = client.db("career_zone");
         const dbCollection = database.collection("jobs")
+        const applications = database.collection("applications")
 
         //get jobs data
         app.get('/jobs', async (req, res) => {
             const result = await dbCollection.find().toArray();
+            res.send(result)
+        })
+        // get sigle job data
+        app.get('/jobs/:id',async(req,res)=>{
+            const id = req.params.id;
+            const query = {_id: new ObjectId(id)}
+            const result = await dbCollection.findOne(query)
+            res.send(result)
+        })
+        //post application 
+        app.post('/apply', async(req,res) => {
+            const application = req.body;
+            const result = await applications.insertOne(application)
             res.send(result)
         })
         // Send a ping to confirm a successful connection
