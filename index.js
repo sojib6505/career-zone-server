@@ -39,23 +39,46 @@ async function run() {
             res.send(result)
         })
         // get sigle job data
-        app.get('/jobs/:id',async(req,res)=>{
+        app.get('/jobs/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id: new ObjectId(id)}
+            const query = { _id: new ObjectId(id) }
             const result = await dbCollection.findOne(query)
             res.send(result)
         })
+
         //post application 
-        app.post('/apply', async(req,res) => {
+        app.post('/apply', async (req, res) => {
             const application = req.body;
             const result = await applications.insertOne(application)
             res.send(result)
         })
         //get application
-        app.get('/application',async(req,res) => {
+        app.get('/application', async (req, res) => {
             const applicant = req.query.email;
-            const result = await applications.find({applicant}).toArray()
+            const result = await applications.find({ applicant }).toArray()
             res.send(result)
+        })
+        //get myApplications
+        app.get('/applications/with-job', async (req, res) => {
+            const applicant = req.query.email;
+            const jobApplications = await applications.aggregate([
+                { $match: { applicant } },
+                {
+                    $addFields:{
+                        jobIdObj:{$toObjectId:'$jobId'}
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'jobs',
+                        localField: 'jobIdObj',
+                        foreignField: '_id',
+                        as: 'jobInfo'
+                    }
+                },
+                { $unwind: "$jobInfo" } 
+            ]).toArray()
+            res.send(jobApplications)
         })
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
