@@ -38,6 +38,13 @@ async function run() {
             const result = await dbCollection.find().toArray();
             res.send(result)
         })
+        //add jobs data
+        app.post('/jobs',async(req,res)=>{
+            const job = req.body;
+             const result = await dbCollection.insertOne(job);
+             res.send(result)
+            console.log(job)
+        })
         // get sigle job data
         app.get('/jobs/:id', async (req, res) => {
             const id = req.params.id;
